@@ -1,8 +1,7 @@
-# PWP SPRING 2019
-# PROJECT NAME
+# PWP SUMMER 2019
+# Training Manager
 # Group information
-* Student 1. Name and email
-* Student 2. Name and email
-* Student 3. Name and email
+* Seppo Torniainen seppo.torniainen@gmail.com
+
 
 
