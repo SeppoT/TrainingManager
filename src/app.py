@@ -21,6 +21,8 @@ courseuserrelation = db.Table("courseuserrelation",
 	db.Column("courseCompletionDate", db.DateTime)
 )
 
+# todo: on delete
+
 class User(db.Model):
 	__tablename__ = 'User'
 	id = db.Column(db.Integer, primary_key=True)

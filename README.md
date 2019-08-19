@@ -15,5 +15,8 @@ Installing app / creating database (windows 10):
 8) In [2]: db.create_all()
 
 
+Test setup:
+
+1) pip install pytest pytest-cov
 
 
