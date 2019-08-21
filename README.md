@@ -13,7 +13,7 @@ Installing app / creating database (windows 10):
 6) start ipython: ipython
 7) In [1]: from app import db
 8) In [2]: db.create_all()
-
+9) database is created in /db directory, and is named database.db
 
 Test setup:
 
