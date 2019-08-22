@@ -3,6 +3,7 @@ import pytest
 import tempfile
 import time
 import sys
+import json
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 from datetime import datetime
 from sqlalchemy.engine import Engine
@@ -20,7 +21,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 @pytest.fixture
 def client():
-    print('starting api test...')
+    
     db_fd, db_fname = tempfile.mkstemp()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_fname
     app.config["TESTING"] = True
@@ -35,6 +36,7 @@ def client():
     os.unlink(db_fname)
 
 def _populate_db():
+    print('api test db creation')
     for i in range(1, 4):
         s = TrainingCourse(
             name="test-course-{}".format(i)
@@ -47,7 +49,13 @@ class TestTrainingCourseCollection(object):
     RESOURCE_URL = "/api/trainingcourses/"
 
     def test_get(self, client):
-        print('TrainingCourseCollection api get test...')
+        print('TrainingCourseCollection api get test(should return 3 items with id and name)')
         resp = client.get(self.RESOURCE_URL)
-        assert resp.status_code == 200        
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        #print(body)
+        assert len(body) == 3
+        for item in body:
+            assert "id" in item
+            assert "name" in item    
 
