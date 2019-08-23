@@ -10,15 +10,14 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 api = Api(app)
 
-
-coursemediarelation = db.Table("coursemediarelation",
-    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id"), primary_key=True),
-    db.Column("mediaid", db.Integer, db.ForeignKey("CourseMedia.id"), primary_key=True)
+coursemediarelation = db.Table("coursemediarelation",db.Model.metadata,
+    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
+    db.Column("mediaid", db.Integer, db.ForeignKey("CourseMedia.id"))
 )
 
 courseuserrelation = db.Table("courseuserrelation",
-    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id"),primary_key=True),
-    db.Column("userid", db.Integer, db.ForeignKey("User.id"),primary_key=True),
+    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
+    db.Column("userid", db.Integer, db.ForeignKey("User.id")),
     db.Column("addedtocourse", db.DateTime),
     db.Column("canModify", db.Boolean),
     db.Column("courseCompletionScore", db.Integer),
@@ -36,6 +35,9 @@ class User(db.Model):
     isAdmin = db.Column(db.Boolean, nullable=False)
     creationdate = db.Column(db.DateTime)
 
+    def __repr__(self):
+        return "<User %s %s>" % (self.firstname,self.lastname)
+
 class TrainingCourse(db.Model):
     __tablename__ = 'TrainingCourse'
     id = db.Column(db.Integer, primary_key=True)
@@ -44,12 +46,20 @@ class TrainingCourse(db.Model):
     startdate = db.Column(db.DateTime)
     enddate = db.Column(db.DateTime)
     coursedatajson = db.Column(db.String)
+    medialist = db.relationship("CourseMedia",secondary=coursemediarelation)
+    users = db.relationship("User",secondary=courseuserrelation)
+
+    def __repr__(self):
+        return "TrainingCourse name : %s \n medias: %s \n users: %s \n" % (self.name,self.medialist,self.users)
 
 class CourseMedia(db.Model):
     __tablename__ = 'CourseMedia'
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(255))
     type = db.Column(db.String(20))
+
+    def __repr__(self):
+        return "<CourseMedia %s %s>" % (self.url,self.type)
 
 
 class TrainingCourseCollection(Resource):

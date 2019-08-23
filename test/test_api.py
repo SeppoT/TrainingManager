@@ -36,12 +36,33 @@ def client():
     os.unlink(db_fname)
 
 def _populate_db():
-    print('api test db creation')
+    print('API test db creation, test data:')
     for i in range(1, 4):
         s = TrainingCourse(
             name="test-course-{}".format(i)
         )
+        
+        for a in range(1,4):
+            media = CourseMedia(
+                url="test-url-{}-{}".format(i,a),
+                type="image"
+            )                
+            s.medialist.append(media)
+
+        for z in range(1,4):
+            user = User(
+                firstname="test-firstname-{}".format(z),
+                lastname="test-lastname-{}".format(z),
+                email="test-email-{}".format(z),
+                isAdmin=False
+            )
+            s.users.append(user)
+
+        print(s)
         db.session.add(s)
+
+
+
     db.session.commit()
 
 class TestTrainingCourseCollection(object):
@@ -58,4 +79,4 @@ class TestTrainingCourseCollection(object):
         for item in body:
             assert "id" in item
             assert "name" in item    
-
+            
