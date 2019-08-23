@@ -36,7 +36,7 @@ def client():
     os.unlink(db_fname)
 
 def _populate_db():
-    print('API test db creation, test data:')
+    """API test db creation, test data"""
     for i in range(1, 4):
         s = TrainingCourse(
             name="test-course-{}".format(i)
@@ -58,7 +58,7 @@ def _populate_db():
             )
             s.users.append(user)
 
-        print(s)
+        #print(s)
         db.session.add(s)
 
     db.session.commit()
@@ -77,4 +77,13 @@ class TestTrainingCourseCollection(object):
         for item in body:
             assert "id" in item
             assert "name" in item    
-            
+
+    def test_post(self, client):
+        valid = {"name":"test-course-validname"}
+
+        resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
+        print('TrainingCourseCollection api post test, invalid media format')
+        print(resp)
+        assert resp.status_code == 415
+
+
