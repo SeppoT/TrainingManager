@@ -61,7 +61,6 @@ class CourseMedia(db.Model):
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
 
-
 class TrainingCourseCollection(Resource):
     def get(self):
         items = TrainingCourse.query.all()
@@ -81,7 +80,9 @@ class TrainingCourseCollection(Resource):
                 "coursedatajson":item.coursedatajson
             }
             #todo only courses media
-            coursemedias = CourseMedia.query.all()
+            #coursemedias = TrainingCourse.query.join(CourseMedia,TrainingCourse.medialist)
+            coursemedias = item.medialist
+
             medialist = []
             for mediaitem in coursemedias:
                 newmediaitem = {

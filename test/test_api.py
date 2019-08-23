@@ -61,8 +61,6 @@ def _populate_db():
         print(s)
         db.session.add(s)
 
-
-
     db.session.commit()
 
 class TestTrainingCourseCollection(object):
@@ -74,7 +72,7 @@ class TestTrainingCourseCollection(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        #print(body)
+        print(body)
         assert len(body) == 3
         for item in body:
             assert "id" in item
