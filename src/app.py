@@ -33,11 +33,7 @@ courseuserrelation = db.Table("courseuserrelation",
 class MasonBuilder(dict):
     """
     Class from course examples.
-    A convenience class for managing dictionaries that represent Mason
-    objects. It provides nice shorthands for inserting some of the more
-    elements into the object but mostly is just a parent for the much more
-    useful subclass defined next. This class is generic in the sense that it
-    does not contain any application specific implementation details.
+
     """
 
     def add_error(self, title, details):
@@ -180,7 +176,7 @@ class TrainingCourseItem(Resource):
             )
         
         return Response(status=204)
-        
+
     def delete(self,course):
         db_course = TrainingCourse.query.filter_by(name=course).first()
         if db_course is None:
