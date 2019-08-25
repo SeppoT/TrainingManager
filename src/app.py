@@ -4,6 +4,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource
 from flask_restful import Api
 
+from sqlalchemy import event
+from sqlalchemy.exc import IntegrityError, StatementError
+
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../db/database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -152,13 +156,42 @@ class TrainingCourseItem(Resource):
         body.add_control("collection", api.url_for(TrainingCourseCollection))
         body.add_control_delete_course(course)
         body.add_control_modify_course(course)
-
+        #print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self,course):
-        pass
+        db_course = TrainingCourse.query.filter_by(name=course).first()
+        if db_course is None:
+            return create_error_response(404, "Not found", 
+                "No course was found with the name {}".format(course)
+            )
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                "Requests must be JSON"
+            )
+
+        db_course.name = request.json["name"]
+        
+        try:
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(409, "Already exists", 
+                "Course with name '{}' already exists.".format(request.json["name"])
+            )
+        
+        return Response(status=204)
+        
     def delete(self,course):
-        pass
+        db_course = TrainingCourse.query.filter_by(name=course).first()
+        if db_course is None:
+            return create_error_response(404, "Not found", 
+                "No course was found with the name {}".format(course)
+            )
+        
+        db.session.delete(db_course)
+        db.session.commit()
+        
+        return Response(status=204)
 
 
 class TrainingCourseCollection(Resource):
@@ -178,9 +211,7 @@ class TrainingCourseCollection(Resource):
                 "startdate":item.startdate,
                 "enddate":item.enddate,
                 "coursedatajson":item.coursedatajson
-            }
-            #todo only courses media
-            #coursemedias = TrainingCourse.query.join(CourseMedia,TrainingCourse.medialist)
+            }            
             coursemedias = item.medialist
 
             medialist = []
@@ -223,3 +254,8 @@ class TrainingCourseCollection(Resource):
 api.add_resource(TrainingCourseCollection, "/api/trainingcourses/")
 api.add_resource(TrainingCourseItem,"/api/trainingcourses/<course>/")
 #api.add_resource(MediaEntry, "api/coursemedia/<id>")
+
+@app.route(LINK_RELATIONS_URL)
+def send_link_relations():
+    return "link relations"
+

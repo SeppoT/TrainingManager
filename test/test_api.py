@@ -63,6 +63,73 @@ def _populate_db():
 
     db.session.commit()
 
+def _check_namespace(client, response):
+    """
+    Check namespace (from course example)
+    """
+    ns_href = response["@namespaces"]["trainingmanager"]["name"]
+    resp = client.get(ns_href)
+    print("Check namespace")
+    print(resp)
+    assert resp.status_code == 200
+    
+def _check_control_get_method(ctrl, client, obj):
+    """
+    Check get control (from course example)
+    """
+    href = obj["@controls"][ctrl]["href"]
+    resp = client.get(href)
+    print("Check get control")
+    print(resp)
+    assert resp.status_code == 200
+    
+def _check_control_delete_method(ctrl, client, obj):
+    """
+    Check delete control (from course example)
+    """
+    href = obj["@controls"][ctrl]["href"]
+    method = obj["@controls"][ctrl]["method"].lower()
+    assert method == "delete"
+    resp = client.delete(href)
+    print("Check delete control")
+    print(resp)
+    assert resp.status_code == 204
+    
+def _check_control_put_method(ctrl, client, obj):
+    """
+    Check put control (from course example)
+    """
+    
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    assert method == "put"
+    assert encoding == "json"
+    body = {}
+    body["name"] = obj["name"]
+    resp = client.put(href, json=body)
+    print("Check put control")
+    print(resp)
+    assert resp.status_code == 204
+    
+def _check_control_post_method(ctrl, client, obj):
+    """
+    Check post control (from course example)
+    """
+    
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()    
+    assert method == "post"
+    assert encoding == "json"
+    body = _get_sensor_json()    
+    resp = client.post(href, json=body)
+
+    assert resp.status_code == 201
+
+
 class TestTrainingCourseCollection(object):
     
     RESOURCE_URL = "/api/trainingcourses/"
@@ -97,4 +164,60 @@ class TestTrainingCourseCollection(object):
         print(resp)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        assert body["name"] == "test-course-validname"     
+        assert body["name"] == "test-course-validname"
+
+class TestTrainingCourse(object):
+
+    RESOURCE_URL = "/api/trainingcourses/test-course-1/"
+    INVALID_URL = "/api/trainingcourses/non-course-x/"    
+
+    def test_get(self, client):
+        print('TrainingCourse api post test, get course')
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert body["name"] == "test-course-1"
+        _check_namespace(client, body)       
+        _check_control_get_method("collection", client, body)
+        _check_control_put_method("edit", client, body)
+        _check_control_delete_method("trainingmanager:delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        print('TrainingCourse api post test, put course')
+        valid = {"name":"test-course-validname"}
+        
+        # test with wrong content type
+        resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
+        print(resp)
+        assert resp.status_code == 415
+        
+        resp = client.put(self.INVALID_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 404
+        
+        # test with another sensor's name
+        valid["name"] = "test-course-2"
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 409
+        
+        # test with valid (only change model)
+        valid["name"] = "test-sensor-1"
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 204
+        
+                
+    def test_delete(self, client):
+        print('TrainingCourse api post test, delete course')
+        resp = client.delete(self.RESOURCE_URL)
+        print(resp)
+        assert resp.status_code == 204
+        resp = client.get(self.RESOURCE_URL)
+        print(resp)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        print(resp)
+        assert resp.status_code == 404        
