@@ -81,9 +81,20 @@ class TestTrainingCourseCollection(object):
     def test_post(self, client):
         valid = {"name":"test-course-validname"}
 
+        #test wrong content type:
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
         print('TrainingCourseCollection api post test, invalid media format')
         print(resp)
         assert resp.status_code == 415
 
-
+        #test with valid content:
+        print('TrainingCourseCollection api post test, valid content')
+        resp = client.post(self.RESOURCE_URL, json=valid)
+        assert resp.status_code == 201
+        print(resp)
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid["name"] + "/")
+        resp = client.get(resp.headers["Location"])
+        print(resp)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert body["name"] == "test-course-validname"     

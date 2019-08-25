@@ -10,6 +10,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 api = Api(app)
 MASON = "application/vnd.mason+json"
+LINK_RELATIONS_URL = "/trainingmanager/link-relations/"
 
 coursemediarelation = db.Table("coursemediarelation",db.Model.metadata,
     db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
@@ -69,6 +70,34 @@ def create_error_response(status_code, title, message=None):
     return Response(json.dumps(body), status_code, mimetype=MASON)
 
 
+class TrainingCourseBuilder(MasonBuilder):
+        def add_control_delete_course(self, course):
+            self.add_control(
+                "trainingmanager:delete",
+                api.url_for(TrainingCourseItem, course=course),
+                method="DELETE",
+                title="Delete this course"
+            )
+
+        def add_control_add_course(self):
+            self.add_control(
+                "trainingmanager:add-course",
+                api.url_for(TrainingCourseCollection),
+                method="POST",
+                encoding="json",
+                title="Add a new course"
+            )
+
+        def add_control_modify_course(self, course):
+            self.add_control(
+                "edit",
+                api.url_for(TrainingCourseItem, course=course),
+                method="PUT",
+                encoding="json",
+                title="Edit this course"          
+            )
+
+
 # todo: on delete
 
 class User(db.Model):
@@ -86,7 +115,7 @@ class User(db.Model):
 class TrainingCourse(db.Model):
     __tablename__ = 'TrainingCourse'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30))
+    name = db.Column(db.String(50), unique=True)
     creationdate = db.Column(db.DateTime)
     startdate = db.Column(db.DateTime)
     enddate = db.Column(db.DateTime)
@@ -105,6 +134,32 @@ class CourseMedia(db.Model):
 
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
+
+
+class TrainingCourseItem(Resource):
+    def get(self,course):
+        db_course = TrainingCourse.query.filter_by(name=course).first()
+        if db_course is None:
+            return create_error_response(404, "Not found", 
+                "No course was found with the name {}".format(course)
+            )
+
+        body = TrainingCourseBuilder(
+            name=db_course.name
+        )
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(TrainingCourseItem, course=course))
+        body.add_control("collection", api.url_for(TrainingCourseCollection))
+        body.add_control_delete_course(course)
+        body.add_control_modify_course(course)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
+
+    def put(self,course):
+        pass
+    def delete(self,course):
+        pass
+
 
 class TrainingCourseCollection(Resource):
     def get(self):
@@ -147,7 +202,24 @@ class TrainingCourseCollection(Resource):
                 "Requests must be JSON"
             )
 
+        course = TrainingCourse(
+            name=request.json["name"]            
+        )
+
+        try:
+            db.session.add(course)
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(409, "Already exists", 
+                "Course with name '{}' already exists.".format(request.json["name"])
+            )
+
+        return Response(status=201, headers={
+            "Location": api.url_for(TrainingCourseItem, course=request.json["name"])
+        })
+
 #api.add_resource(UserCollection, "/api/users/")
 #api.add_resource(UserEntry, "/api/users/<id>/")
 api.add_resource(TrainingCourseCollection, "/api/trainingcourses/")
+api.add_resource(TrainingCourseItem,"/api/trainingcourses/<course>/")
 #api.add_resource(MediaEntry, "api/coursemedia/<id>")
