@@ -172,7 +172,7 @@ class TestTrainingCourse(object):
     INVALID_URL = "/api/trainingcourses/non-course-x/"    
 
     def test_get(self, client):
-        print('TrainingCourse api post test, get course')
+        print('TrainingCourse api  test, get course')
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -180,12 +180,12 @@ class TestTrainingCourse(object):
         _check_namespace(client, body)       
         _check_control_get_method("collection", client, body)
         _check_control_put_method("edit", client, body)
-        _check_control_delete_method("trainingmanager:delete", client, body)
+        _check_control_delete_method("trainingmanager:delete-course", client, body)
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
 
     def test_put(self, client):
-        print('TrainingCourse api post test, put course')
+        print('TrainingCourse api test, put course')
         valid = {"name":"test-course-validname"}
         
         # test with wrong content type
@@ -211,7 +211,7 @@ class TestTrainingCourse(object):
         
                 
     def test_delete(self, client):
-        print('TrainingCourse api post test, delete course')
+        print('TrainingCourse api test, delete course')
         resp = client.delete(self.RESOURCE_URL)
         print(resp)
         assert resp.status_code == 204
@@ -220,4 +220,13 @@ class TestTrainingCourse(object):
         assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
         print(resp)
-        assert resp.status_code == 404        
+        assert resp.status_code == 404
+
+
+class TestUser(object):
+
+    RESOURCE_URL = "/api/users/1/"
+    INVALID_URL = "/api/users/0/"
+
+    def test_get(self, client):
+        print('User api test, get course')

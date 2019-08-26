@@ -69,11 +69,36 @@ def create_error_response(status_code, title, message=None):
     #body.add_control("profile", href=ERROR_PROFILE)
     return Response(json.dumps(body), status_code, mimetype=MASON)
 
+class UserBuilder(MasonBuilder):
+        def add_control_add_user(self,user):
+            self.add_control(                
+                "trainingmanager:add-user",
+                api.url_for(UserCollection),
+                method="POST",
+                encoding="json",
+                title="Add new user"
+            )
+        def add_control_delete_user(self,id):
+            self.add_control(
+                "trainingmanager:delete-user",
+                api.url_for(UserItem, id=id),
+                method="DELETE",
+                title="Delete this user"
+            )
+        def add_control_modify_user(self,id):
+            self.add_control(
+                "edit",
+                api.url_for(UserItem, id=id),
+                method="PUT",
+                encoding="json",
+                title="Edit this user"    
+            )
+
 
 class TrainingCourseBuilder(MasonBuilder):
         def add_control_delete_course(self, course):
             self.add_control(
-                "trainingmanager:delete",
+                "trainingmanager:delete-course",
                 api.url_for(TrainingCourseItem, course=course),
                 method="DELETE",
                 title="Delete this course"
@@ -85,7 +110,7 @@ class TrainingCourseBuilder(MasonBuilder):
                 api.url_for(TrainingCourseCollection),
                 method="POST",
                 encoding="json",
-                title="Add a new course"
+                title="Add new course"
             )
 
         def add_control_modify_course(self, course):
@@ -96,6 +121,23 @@ class TrainingCourseBuilder(MasonBuilder):
                 encoding="json",
                 title="Edit this course"          
             )
+
+        def add_control_add_media(self, course):
+            self.add_control(
+                "addmedia",
+                api.url_for(TrainingCourseItem, course=course),
+                method="POST",
+                encoding="json",
+                title="Add media to course"
+                )
+        def add_control_add_user_to_course(self, course):
+            self.add_control(
+                "addcourseuser",
+                api.url_for(TrainingCourseItem, course=course),
+                method="POST",
+                encoding="json",
+                title="Add user to course"
+                )
 
 
 # todo: on delete
@@ -108,6 +150,7 @@ class User(db.Model):
     email = db.Column(db.String(100))
     isAdmin = db.Column(db.Boolean, nullable=False)
     creationdate = db.Column(db.DateTime)
+    courses = db.relationship("TrainingCourse",secondary=courseuserrelation,back_populates="users")
 
     def __repr__(self):
         return "<User %s %s>" % (self.firstname,self.lastname)
@@ -120,7 +163,7 @@ class TrainingCourse(db.Model):
     startdate = db.Column(db.DateTime)
     enddate = db.Column(db.DateTime)
     coursedatajson = db.Column(db.String)
-    medialist = db.relationship("CourseMedia",secondary=coursemediarelation)
+    medialist = db.relationship("CourseMedia",secondary=coursemediarelation,back_populates="courses")
     users = db.relationship("User",secondary=courseuserrelation)
 
     def __repr__(self):
@@ -131,6 +174,7 @@ class CourseMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(255))
     type = db.Column(db.String(20))
+    courses = db.relationship("TrainingCourse",secondary=coursemediarelation,back_populates="medialist")
 
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
@@ -152,7 +196,14 @@ class TrainingCourseItem(Resource):
         body.add_control("collection", api.url_for(TrainingCourseCollection))
         body.add_control_delete_course(course)
         body.add_control_modify_course(course)
-        #print(json.dumps(body))
+        body.add_control_add_media(course)
+        body.add_control_add_user_to_course(course)
+
+        body.add_control("trainingmanager:coursemedias",
+            api.url_for(CourseMediaCollection, course=course)
+        )
+
+        print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self,course):
@@ -192,6 +243,12 @@ class TrainingCourseItem(Resource):
 
 class TrainingCourseCollection(Resource):
     def get(self):
+
+        body = TrainingCourseBuilder()
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(TrainingCourseCollection))
+        body.add_control_add_course()
+
         items = TrainingCourse.query.all()
         returnlist = []
         for item in items:
@@ -245,11 +302,54 @@ class TrainingCourseCollection(Resource):
             "Location": api.url_for(TrainingCourseItem, course=request.json["name"])
         })
 
-#api.add_resource(UserCollection, "/api/users/")
-#api.add_resource(UserEntry, "/api/users/<id>/")
+class CourseMediaCollection(Resource):
+    def get(self):
+        pass
+    def post(self):
+        pass
+
+class MediaEntry(Resource):
+    def get(self):
+        pass
+    def post(self):
+        pass
+
+class UserCollection(Resource):
+    def get(self):
+        pass
+    def post(self):
+        pass  
+
+class UserItem(Resource):
+    def get(self,id):
+        db_user = User.query.filter_by(id=id).first()
+        if db_user is None:
+            return create_error_response(404, "Not found", 
+                "No user was found with the id {}".format(id)
+            )
+
+        body = UserBuilder(
+            firstname=db_user.firstname,
+            lastname=db_user.lastname
+        )
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(UserItem, id=id))
+        body.add_control("collection", api.url_for(ÚserCollection))
+        body.add_control_delete_user(id)
+        body.add_control_modify_user(id)
+
+        print(json.dumps(body))
+        return Response(json.dumps(body), 200, mimetype=MASON)
+
+    def post(self):
+        pass    
+
+api.add_resource(UserCollection, "/api/users/")
+api.add_resource(UserItem, "/api/users/<id>/")
 api.add_resource(TrainingCourseCollection, "/api/trainingcourses/")
 api.add_resource(TrainingCourseItem,"/api/trainingcourses/<course>/")
-#api.add_resource(MediaEntry, "api/coursemedia/<id>")
+api.add_resource(MediaEntry, "/api/coursemedia/<id>/")
+api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
 
 @app.route(LINK_RELATIONS_URL)
 def send_link_relations():
