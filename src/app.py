@@ -341,8 +341,41 @@ class UserItem(Resource):
         print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    def post(self):
-        pass    
+    def put(self,id):
+        db_user = User.query.filter_by(id=id).first()
+        if db_user is None:
+            return create_error_response(404, "Not found", 
+                "No user was found with the id {}".format(id)
+            )
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                "Requests must be JSON"
+            )
+
+        db_user.firstname = request.json["firstname"]
+        #db_user.lastname = request.json["lastname"]
+        #db_user.email = request.json["email"]
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(409, "Already exists", 
+                "User with id '{}' put error".format(request.json["id"])
+            )
+        
+        return Response(status=204)    
+
+    def delete(self,id):
+        db_user = User.query.filter_by(id=id).first()
+        if db_user is None:
+            return create_error_response(404, "Not found", 
+                "No user was found with the id {}".format(id)
+            )
+        
+        db.session.delete(db_user)
+        db.session.commit()
+        
+        return Response(status=204)
 
 api.add_resource(UserCollection, "/api/users/")
 api.add_resource(UserItem, "/api/users/<id>/")

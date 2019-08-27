@@ -197,14 +197,14 @@ class TestTrainingCourse(object):
         print(resp)
         assert resp.status_code == 404
         
-        # test with another sensor's name
+        # test with another name
         valid["name"] = "test-course-2"
         resp = client.put(self.RESOURCE_URL, json=valid)
         print(resp)
         assert resp.status_code == 409
         
-        # test with valid (only change model)
-        valid["name"] = "test-sensor-1"
+        # test with valid 
+        valid["name"] = "test-course-1"
         resp = client.put(self.RESOURCE_URL, json=valid)
         print(resp)
         assert resp.status_code == 204
@@ -229,4 +229,37 @@ class TestUser(object):
     INVALID_URL = "/api/users/0/"
 
     def test_get(self, client):
-        print('User api test, get course')
+        print('User api test, get')
+
+    def test_put(self, client):
+        print('User api test, put')
+    
+        valid = {"firstname":"test-user-validname"}
+        
+        # test with wrong content type
+        resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
+        print(resp)
+        assert resp.status_code == 415
+        
+        resp = client.put(self.INVALID_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 404
+        
+        # test with valid 
+        valid["firstname"] = "test-course-1"
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 204
+
+
+    def test_delete(self, client):
+        print('User api test, delete')
+        resp = client.delete(self.RESOURCE_URL)
+        print(resp)
+        assert resp.status_code == 204
+        resp = client.get(self.RESOURCE_URL)
+        print(resp)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        print(resp)
+        assert resp.status_code == 404
