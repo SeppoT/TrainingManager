@@ -230,6 +230,16 @@ class TestUser(object):
 
     def test_get(self, client):
         print('User api test, get')
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        #print(body)
+        assert body["firstname"] == "test-firstname-1"
+        _check_namespace(client, body)       
+        _check_control_get_method("collection", client, body)
+        _check_control_delete_method("trainingmanager:delete-user", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
 
     def test_put(self, client):
         print('User api test, put')
@@ -263,3 +273,4 @@ class TestUser(object):
         resp = client.delete(self.INVALID_URL)
         print(resp)
         assert resp.status_code == 404
+

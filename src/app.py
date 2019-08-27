@@ -334,7 +334,7 @@ class UserItem(Resource):
         )
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(UserItem, id=id))
-        body.add_control("collection", api.url_for(ÚserCollection))
+        body.add_control("collection", api.url_for(UserCollection))
         body.add_control_delete_user(id)
         body.add_control_modify_user(id)
 
