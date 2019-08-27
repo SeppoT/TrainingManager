@@ -70,7 +70,7 @@ def create_error_response(status_code, title, message=None):
     return Response(json.dumps(body), status_code, mimetype=MASON)
 
 class UserBuilder(MasonBuilder):
-        def add_control_add_user(self,user):
+        def add_control_add_user(self):
             self.add_control(                
                 "trainingmanager:add-user",
                 api.url_for(UserCollection),
@@ -316,9 +316,46 @@ class MediaEntry(Resource):
 
 class UserCollection(Resource):
     def get(self):
-        pass
+        body = UserBuilder()
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(UserCollection))
+        body.add_control_add_user()
+
+        items = User.query.all()
+        returnlist = []
+        for item in items:            
+
+            newitem = {
+                "id":item.id,
+                "firstname":item.firstname,
+                "lastname":item.lastname,
+                "email":item.email
+            }
+            
+            returnlist.append(newitem)
+        return returnlist
     def post(self):
-        pass  
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                "Requests must be JSON"
+            )
+
+        newuser = User(
+            firstname=request.json["firstname"],
+            lastname=request.json["lastname"],
+            isAdmin=request.json["isAdmin"],            
+        )
+              
+        try:
+            db.session.add(newuser)
+            db.session.commit()
+        except IntegrityError as e:
+            print(e)
+            return create_error_response(409, "Integrityerror, user add")
+
+        return Response(status=201, headers={
+            "Location": api.url_for(UserItem, id=newuser.id)
+        })
 
 class UserItem(Resource):
     def get(self,id):
@@ -351,10 +388,10 @@ class UserItem(Resource):
             return create_error_response(415, "Unsupported media type",
                 "Requests must be JSON"
             )
-
+        print("*** db_user: {}",db_user)
         db_user.firstname = request.json["firstname"]
-        #db_user.lastname = request.json["lastname"]
-        #db_user.email = request.json["email"]
+        db_user.lastname = request.json["lastname"]
+        db_user.email = request.json["email"]
 
         try:
             db.session.commit()

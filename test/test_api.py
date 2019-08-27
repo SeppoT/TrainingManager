@@ -256,7 +256,10 @@ class TestUser(object):
         assert resp.status_code == 404
         
         # test with valid 
-        valid["firstname"] = "test-course-1"
+        valid["firstname"] = "test-firstname-1"
+        valid["lastname"] = "test-lastname-1"
+        valid["email"] = "test-email-1"
+
         resp = client.put(self.RESOURCE_URL, json=valid)
         print(resp)
         assert resp.status_code == 204
@@ -274,3 +277,42 @@ class TestUser(object):
         print(resp)
         assert resp.status_code == 404
 
+class TestUserCollection(object):
+    
+    RESOURCE_URL = "/api/users/"
+
+    def Xtest_get(self, client):
+        print('User collection api test(should return 3 items with id and  first name)')
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        print(body)
+        assert len(body) == 3
+        for item in body:
+            assert "id" in item
+            assert "firstname" in item    
+
+    def test_post(self, client):
+        valid = {"firstname":"test-valid-firstname"}
+        valid["lastname"] = "test-lastname"
+        valid["email"] = "test-email"
+        valid["isAdmin"] = False
+
+        #test wrong content type:
+        resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
+        print('User collection api test,post invalid media format')
+        print(resp)
+        assert resp.status_code == 415
+
+        #test with valid content:
+        print('User collection api test, valid content')
+        print(valid)
+        resp = client.post(self.RESOURCE_URL, json=valid)        
+        assert resp.status_code == 201
+        
+        assert resp.headers["Location"].endswith("/")
+        resp = client.get(resp.headers["Location"])
+        print(resp)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert body["firstname"] == "test-valid-firstname"
