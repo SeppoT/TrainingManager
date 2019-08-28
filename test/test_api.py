@@ -281,14 +281,14 @@ class TestUserCollection(object):
     
     RESOURCE_URL = "/api/users/"
 
-    def Xtest_get(self, client):
-        print('User collection api test(should return 3 items with id and  first name)')
+    def test_get(self, client):
+        print('User collection api test(should return 3 items with id and first name)')
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        print(body)
-        assert len(body) == 3
-        for item in body:
+        #print(body)
+        assert len(body["items"]) == 9
+        for item in body["items"]:            
             assert "id" in item
             assert "firstname" in item    
 
@@ -316,3 +316,21 @@ class TestUserCollection(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["firstname"] == "test-valid-firstname"
+
+class TestMediaItem(object):
+    pass
+
+class TestCourseMediaCollection(object):
+    RESOURCE_URL = "/api/trainingcourses/1/medias/"
+
+    def test_get(self, client):
+        print('Media collection api test(should return 3 items with id and url)')
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        #print(body)
+        assert len(body) == 9
+        for item in body:
+            assert "type" in item
+            assert "url" in item 
+

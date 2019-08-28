@@ -59,6 +59,7 @@ class MasonBuilder(dict):
 
         self["@controls"][ctrl_name] = kwargs
         self["@controls"][ctrl_name]["href"] = href
+
 def create_error_response(status_code, title, message=None):
     """
     Class from course examples.
@@ -92,6 +93,16 @@ class UserBuilder(MasonBuilder):
                 method="PUT",
                 encoding="json",
                 title="Edit this user"    
+            )
+
+class MediaBuilder(MasonBuilder):
+        def add_control_add_media(self):
+            self.add_control(                
+                "trainingmanager:add-media",
+                api.url_for(CourseMediaCollection),
+                method="POST",
+                encoding="json",
+                title="Add new media"
             )
 
 
@@ -303,15 +314,68 @@ class TrainingCourseCollection(Resource):
         })
 
 class CourseMediaCollection(Resource):
-    def get(self):
-        pass
-    def post(self):
-        pass
+    def get(self,course):
+        body = MediaBuilder()
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(CourseMediaCollection, course=course))
+        #body.add_control_add_media()
+        print(body)
 
-class MediaEntry(Resource):
-    def get(self):
-        pass
+        items = CourseMedia.query.all()
+        returnlist = []
+        for item in items:            
+
+            newitem = {
+                "url":item.url,
+                "type":item.type
+            }
+            
+            returnlist.append(newitem)
+        return returnlist
+
     def post(self):
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                "Requests must be JSON"
+            )
+
+        newmedia = CourseMedia(
+            url=request.json["url"],
+            type=request.json["type"]        
+        )
+              
+        try:
+            db.session.add(newmedia)
+            db.session.commit()
+        except IntegrityError as e:
+            print(e)
+            return create_error_response(409, "Integrityerror, media add")
+
+        return Response(status=201, headers={
+            "Location": api.url_for(CourseMediaItem, id=newmedia.id)
+        })
+
+class MediaItem(Resource):
+    def get(self):
+        db_media = CourseMedia.query.filter_by(id=id).first()
+        if db_media is None:
+            return create_error_response(404, "Not found", 
+                "No media was found with the id {}".format(id)
+            )
+
+        body = MediaBuilder(
+            url=db_media.url,
+            type=db_media.type
+        )
+        body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(MediaItem, id=id))
+        body.add_control("collection", api.url_for(CourseMediaCollection))
+
+        print(json.dumps(body))
+        return Response(json.dumps(body), 200, mimetype=MASON)
+    def put(self):
+        pass
+    def delete(self):
         pass
 
 class UserCollection(Resource):
@@ -320,20 +384,20 @@ class UserCollection(Resource):
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(UserCollection))
         body.add_control_add_user()
+        body["items"] = []
+        for item in User.query.all():         
 
-        items = User.query.all()
-        returnlist = []
-        for item in items:            
-
-            newitem = {
-                "id":item.id,
-                "firstname":item.firstname,
-                "lastname":item.lastname,
-                "email":item.email
-            }
+            newitem = UserBuilder(
+                id=item.id,
+                firstname=item.firstname,
+                lastname=item.lastname,
+                email=item.email
+            )
+            newitem.add_control("self", api.url_for(UserItem, id=item.id))            
+            body["items"].append(newitem)
             
-            returnlist.append(newitem)
-        return returnlist
+        return Response(json.dumps(body), 200, mimetype=MASON)
+
     def post(self):
         if not request.json:
             return create_error_response(415, "Unsupported media type",
@@ -418,8 +482,9 @@ api.add_resource(UserCollection, "/api/users/")
 api.add_resource(UserItem, "/api/users/<id>/")
 api.add_resource(TrainingCourseCollection, "/api/trainingcourses/")
 api.add_resource(TrainingCourseItem,"/api/trainingcourses/<course>/")
-api.add_resource(MediaEntry, "/api/coursemedia/<id>/")
+api.add_resource(MediaItem, "/api/coursemedia/<id>/")
 api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
+
 
 @app.route(LINK_RELATIONS_URL)
 def send_link_relations():
