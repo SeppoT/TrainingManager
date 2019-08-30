@@ -333,7 +333,7 @@ class CourseMediaCollection(Resource):
             returnlist.append(newitem)
         return returnlist
 
-    def post(self):
+    def post(self,course):
         if not request.json:
             return create_error_response(415, "Unsupported media type",
                 "Requests must be JSON"
@@ -343,7 +343,7 @@ class CourseMediaCollection(Resource):
             url=request.json["url"],
             type=request.json["type"]        
         )
-              
+            
         try:
             db.session.add(newmedia)
             db.session.commit()
@@ -352,11 +352,11 @@ class CourseMediaCollection(Resource):
             return create_error_response(409, "Integrityerror, media add")
 
         return Response(status=201, headers={
-            "Location": api.url_for(CourseMediaItem, id=newmedia.id)
+            "Location": api.url_for(MediaItem, id=newmedia.id)
         })
 
 class MediaItem(Resource):
-    def get(self):
+    def get(self,id):        
         db_media = CourseMedia.query.filter_by(id=id).first()
         if db_media is None:
             return create_error_response(404, "Not found", 
@@ -369,14 +369,43 @@ class MediaItem(Resource):
         )
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(MediaItem, id=id))
-        body.add_control("collection", api.url_for(CourseMediaCollection))
+        #Should return all media items, not implemented
+        #body.add_control("collection", api.url_for(AllMediaCollection))
 
         print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
-    def put(self):
-        pass
+    def put(self,id):
+        db_media = CourseMedia.query.filter_by(id=id).first()
+        if db_media is None:
+            return create_error_response(404, "Not found", 
+                "No media was found with the id {}".format(id)
+            )
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                "Requests must be JSON"
+            )      
+        db_media.url = request.json["url"]
+        db_media.type = request.json["type"]       
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(409, "Already exists", 
+                "Media with id '{}' put error".format(request.json["id"])
+            )
+        
+        return Response(status=204) 
     def delete(self):
-        pass
+        db_media = CourseMedia.query.filter_by(id=id).first()
+        if db_media is None:
+            return create_error_response(404, "Not found", 
+                "No media was found with the id {}".format(id)
+            )
+        
+        db.session.delete(db_media)
+        db.session.commit()
+        
+        return Response(status=204)
 
 class UserCollection(Resource):
     def get(self):
@@ -452,7 +481,7 @@ class UserItem(Resource):
             return create_error_response(415, "Unsupported media type",
                 "Requests must be JSON"
             )
-        print("*** db_user: {}",db_user)
+
         db_user.firstname = request.json["firstname"]
         db_user.lastname = request.json["lastname"]
         db_user.email = request.json["email"]
@@ -483,6 +512,8 @@ api.add_resource(UserItem, "/api/users/<id>/")
 api.add_resource(TrainingCourseCollection, "/api/trainingcourses/")
 api.add_resource(TrainingCourseItem,"/api/trainingcourses/<course>/")
 api.add_resource(MediaItem, "/api/coursemedia/<id>/")
+#all medias from all cources, not implemented:
+#api.add_resource(MediaItemCollection, "/api/coursemedia/") 
 api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
 
 

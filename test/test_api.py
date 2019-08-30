@@ -311,14 +311,51 @@ class TestUserCollection(object):
         assert resp.status_code == 201
         
         assert resp.headers["Location"].endswith("/")
+        print(resp.headers["Location"])
         resp = client.get(resp.headers["Location"])
-        print(resp)
+        
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["firstname"] == "test-valid-firstname"
 
 class TestMediaItem(object):
-    pass
+    RESOURCE_URL = "/api/coursemedia/1/"
+    INVALID_URL = "/api/coursemedia/0/"
+
+    def test_get(self, client):
+        print('Media api test, get')
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        #print(body)
+        assert body["url"] == "test-url-1-1"
+        _check_namespace(client, body)               
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        print('Media api test, put')
+    
+        valid = {"url":"valid-url"}
+        
+        # test with wrong content type
+        resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
+        print(resp)
+        assert resp.status_code == 415
+        
+        resp = client.put(self.INVALID_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 404
+        
+        # test with valid 
+        valid["url"] = "valid-url-1"
+        valid["type"] = "valid-type-1"
+
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        print(resp)
+        assert resp.status_code == 204
+
+
 
 class TestCourseMediaCollection(object):
     RESOURCE_URL = "/api/trainingcourses/1/medias/"
@@ -333,4 +370,29 @@ class TestCourseMediaCollection(object):
         for item in body:
             assert "type" in item
             assert "url" in item 
+
+    def test_post(self, client):
+        valid = {"url":"test-valid-url"}
+        valid["type"] = "image"
+
+        #test wrong content type:
+        resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
+        print('User collection api test,post invalid media format')
+        print(resp)
+        assert resp.status_code == 415
+
+        #test with valid content:
+        print('User collection api test, valid content')
+        print(valid)
+        resp = client.post(self.RESOURCE_URL, json=valid)        
+        assert resp.status_code == 201
+        
+        assert resp.headers["Location"].endswith("/")
+        print(resp.headers["Location"])
+        resp = client.get(resp.headers["Location"])
+        print(resp)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert body["url"] == "test-valid-url"
+
 
