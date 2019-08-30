@@ -169,7 +169,7 @@ class TrainingCourse(db.Model):
     enddate = db.Column(db.DateTime)
     coursedatajson = db.Column(db.String)
     medialist = db.relationship("CourseMedia",secondary=coursemediarelation,back_populates="courses")
-    users = db.relationship("User",secondary=courseuserrelation)
+    users = db.relationship("User",secondary=courseuserrelation,back_populates="courses")
 
     def __repr__(self):
         return "TrainingCourse name : %s \n medias: %s \n users: %s \n" % (self.name,self.medialist,self.users)
@@ -185,7 +185,7 @@ class CourseMedia(db.Model):
         return "<CourseMedia %s %s>" % (self.url,self.type)
 
 """
-Resources for rest api
+Resource classes for rest api
 """
 class TrainingCourseItem(Resource):
     def get(self,course):
@@ -258,10 +258,6 @@ class TrainingCourseCollection(Resource):
         items = TrainingCourse.query.all()
         returnlist = []
         for item in items:
-            #iteminventory = []
-            #storageitems = StorageItem.query.filter_by(product=item)
-            #for storageitem in storageitems:
-            #   iteminventory.append([storageitem.location,storageitem.qty])
 
             newitem = {
                 "id":item.id,
@@ -313,7 +309,6 @@ class CourseMediaCollection(Resource):
         body = MediaBuilder()
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(CourseMediaCollection, course=course))
-        #body.add_control_add_media()
         print(body)
 
         items = CourseMedia.query.all()
@@ -514,4 +509,3 @@ api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
 @app.route(LINK_RELATIONS_URL)
 def send_link_relations():
     return "link relations"
-

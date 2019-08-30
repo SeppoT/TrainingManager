@@ -33,5 +33,50 @@ def db_handle():
     os.close(db_fd)
     os.unlink(db_fname)
 
+def get_user():
+    return User(
+        firstname="testfirst",
+        lastname="testlast",
+        email="testemail",
+        isAdmin=False
+    )
+def get_course():
+    return TrainingCourse(
+        name="testcoursename"
+    )
 
- 
+def get_media():
+    return CourseMedia(
+        url="testurl",
+        type="image"
+    )
+
+def test_create_instances(db_handle):
+    """
+    Create instances, based on course example
+    """
+    print("App+Db test, create instances")
+    user = get_user()
+    course = get_course()
+    media = get_media()
+
+    course.users.append(user)
+    course.medialist.append(media)
+
+    db_handle.session.add(user)
+    db_handle.session.add(course)
+    db_handle.session.add(media)
+
+    db_handle.session.commit();
+
+    assert User.query.count() == 1
+    assert CourseMedia.query.count() == 1
+    assert TrainingCourse.query.count() == 1
+
+    db_user = User.query.first()
+    db_course = TrainingCourse.query.first()
+    db_media = CourseMedia.query.first()
+
+    #Check that course countain appended user and media
+    assert db_user in db_course.users
+    assert db_media in db_course.medialist
