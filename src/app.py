@@ -7,7 +7,6 @@ from flask_restful import Api
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
 
-
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../db/database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -35,28 +34,21 @@ class MasonBuilder(dict):
     Class from course examples.
 
     """
-
     def add_error(self, title, details):
-
         self["@error"] = {
             "@message": title,
             "@messages": [details],
         }
-
     def add_namespace(self, ns, uri):
-
         if "@namespaces" not in self:
             self["@namespaces"] = {}
 
         self["@namespaces"][ns] = {
             "name": uri
         }
-
     def add_control(self, ctrl_name, href, **kwargs):
-
         if "@controls" not in self:
             self["@controls"] = {}
-
         self["@controls"][ctrl_name] = kwargs
         self["@controls"][ctrl_name]["href"] = href
 
@@ -105,7 +97,6 @@ class MediaBuilder(MasonBuilder):
                 title="Add new media"
             )
 
-
 class TrainingCourseBuilder(MasonBuilder):
         def add_control_delete_course(self, course):
             self.add_control(
@@ -153,6 +144,9 @@ class TrainingCourseBuilder(MasonBuilder):
 
 # todo: on delete
 
+"""
+Database ORM classes (SQLAlchemy)
+"""
 class User(db.Model):
     __tablename__ = 'User'
     id = db.Column(db.Integer, primary_key=True)
@@ -190,7 +184,9 @@ class CourseMedia(db.Model):
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
 
-
+"""
+Resources for rest api
+"""
 class TrainingCourseItem(Resource):
     def get(self,course):
         db_course = TrainingCourse.query.filter_by(name=course).first()
@@ -250,7 +246,6 @@ class TrainingCourseItem(Resource):
         db.session.commit()
         
         return Response(status=204)
-
 
 class TrainingCourseCollection(Resource):
     def get(self):
@@ -515,7 +510,6 @@ api.add_resource(MediaItem, "/api/coursemedia/<id>/")
 #all medias from all cources, not implemented:
 #api.add_resource(MediaItemCollection, "/api/coursemedia/") 
 api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
-
 
 @app.route(LINK_RELATIONS_URL)
 def send_link_relations():
