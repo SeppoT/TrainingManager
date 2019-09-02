@@ -40,6 +40,7 @@ def get_user():
         email="testemail",
         isAdmin=False
     )
+
 def get_course():
     return TrainingCourse(
         name="testcoursename"
@@ -80,3 +81,28 @@ def test_create_instances(db_handle):
     #Check that course countain appended user and media
     assert db_user in db_course.users
     assert db_media in db_course.medialist
+
+def test_user_columns(db_handle):
+    
+    print("App+Db test, test user columns")
+    #test user has isAdmin flag set
+    user = User()
+    db_handle.session.add(user)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+def test_course_columns(db_handle):
+
+    print("App+Db test, test course columns")
+    #test that course name is unique
+    course1=get_course()
+    course2=get_course()
+    db_handle.session.add(course1)
+    db_handle.session.add(course2)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
