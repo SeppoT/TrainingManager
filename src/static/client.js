@@ -5,6 +5,7 @@ const MASONJSON = "application/vnd.mason+json";
 const PLAINJSON = "application/json";
 
 const USERS_URL = "http://localhost:5000/api/users/"
+const COURSES_URL = "http://localhost:5000/api/trainingcourses/"
 
 function renderError(error) {
    
@@ -24,6 +25,11 @@ function getResource(href, renderer) {
     });
 }
 
+function followLink(event, a, renderer) {
+    event.preventDefault();
+    getResource($(a).attr("href"), renderer);
+}
+
 function sendData(href, method, item, postProcessor) {
     $.ajax({
         url: href,
@@ -36,6 +42,69 @@ function sendData(href, method, item, postProcessor) {
     });
 }
 
+function renderUser(body) {
+	renderMsg(JSON.stringify(body));
+	$("#userview").empty()
+	$("#userview").show()	
+	$("#usertable").hide()
+	$(".usertablenav").hide()
+	$(".usernav").show()
+	$("#coursetable").show()
+	$(".coursenav").hide()
+
+	loadCourseList()
+
+	$('#backtouserlistbutton').on('click', function(event) 
+	{
+		 renderUserList()
+	})
+
+	$('#deleteuserbutton').off('click');
+	$('#deleteuserbutton').on('click', function(event) 
+	{
+		 let data = {}
+		 renderMsg("User delete:"+body["@controls"]["trainingmanager:delete-user"]["href"]);
+		 sendData(body["@controls"]["trainingmanager:delete-user"]["href"], "DELETE", data, userDeleted);
+	})
+
+	$("#userview").append("<h3>"+body.firstname+" "+body.lastname+"</h3>")
+}
+
+
+function renderCourse(body) {
+	renderMsg(JSON.stringify(body));
+	$("#userview").empty()
+	$("#userview").hide()	
+	$("#usertable").hide()
+	$(".usertablenav").hide()
+	$(".usernav").hide()
+	$("#coursetable").hide()
+	$(".coursenav").show()
+
+	$('#backtouserlistbutton2').on('click', function(event) 
+	{
+		 renderUserList()
+	})
+
+}
+
+function userDeleted(data, status, jqxhr)
+{	
+	renderMsg("User deleted")
+	loadUserList();
+	renderUserList();
+}
+
+function renderUserList() {
+	//collection api url not from controls, fixed url
+	$("#userview").hide()	
+	$("#usertable").show()
+	$(".usertablenav").show()
+	$(".usernav").hide()
+	$("#coursetable").hide()
+	$(".coursenav").hide()
+
+}
 
 function userAdded(data, status, jqxhr)
 {
@@ -44,9 +113,22 @@ function userAdded(data, status, jqxhr)
 	loadUserList()
 }
 
+function courseAdded(data, status, jqxhr)
+{
+	let href = jqxhr.getResponseHeader("Location");
+	renderMsg("Course added : "+href)
+	loadCourseList()
+}
+
+
 function loadUserList()
 {
 	sendData("http://localhost:5000/api/users/", "GET", {}, usersLoaded);
+}
+
+function loadCourseList()
+{
+	sendData("http://localhost:5000/api/trainingcourses/", "GET", {}, coursesLoaded);
 }
 
 function usersLoaded(data, status, jqxhr)
@@ -55,7 +137,17 @@ function usersLoaded(data, status, jqxhr)
 	//console.log(data.items)
 	for (let [key, value] of Object.entries(data.items)) {
     	//console.log(key, value);
-    	$("#usertablebody").append("<tr><td>"+value.firstname+"</td><td>"+value.lastname+"</td><td>"+value["@controls"]["self"]["href"]+"</td>");
+    	$("#usertablebody").append("<tr><td>"+value.firstname+"</td><td>"+value.lastname+"</td><td><a class='btn btn-primary' type='button' href='"+value["@controls"]["self"]["href"]+"' onClick='followLink(event, this, renderUser)'>Login</a></td>");
+	}
+}
+
+function coursesLoaded(data, status, jqxhr)
+{
+	$("#coursetablebody").empty();
+	//console.log(data.items)
+	for (let [key, value] of Object.entries(data.items)) {
+    	//console.log(key, value);
+    	$("#coursetablebody").append("<tr><td>"+value.name+"</td><td><a class='btn btn-primary' type='button' href='"+value["@controls"]["self"]["href"]+"' onClick='followLink(event, this, renderCourse)'>Open course</a></td>");
 	}
 }
 
@@ -73,9 +165,9 @@ $(document).ready(function () {
 		$("#notificationarea").empty();
 	})
 
-   $('#createUsers').on('click', function(event) 
+   $('#createData').on('click', function(event) 
 	{
-		console.log("Create test users");
+		console.log("Create test data");
 		renderMsg("Creating test users...")
 		
 		let data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":true};
@@ -88,6 +180,8 @@ $(document).ready(function () {
 		data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":false};
 		sendData(USERS_URL, "POST", data, userAdded);
 
+		data = {"name":"Test course "+Math.floor((Math.random() * 10000) + 1)}
+		sendData(COURSES_URL, "POST", data, courseAdded);
 	})
 
 	$('#deleteData').on('click', function(event) 
@@ -104,7 +198,9 @@ $(document).ready(function () {
 		renderMsg("Refresh data from server...")
 		loadUserList()
 	})
+	$("#userview").hide();
+	$(".usernav").hide();
 
-	loadUserList()
+	loadUserList();
 });
 

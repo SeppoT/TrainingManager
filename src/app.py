@@ -187,13 +187,14 @@ Resource classes for rest api
 """
 class TrainingCourseItem(Resource):
     def get(self,course):
-        db_course = TrainingCourse.query.filter_by(name=course).first()
+        db_course = TrainingCourse.query.filter_by(id=course).first()
         if db_course is None:
             return create_error_response(404, "Not found", 
-                "No course was found with the name {}".format(course)
+                "No course was found with the id {}".format(course)
             )
 
         body = TrainingCourseBuilder(
+            id=db_course.id,
             name=db_course.name
         )
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
@@ -212,7 +213,7 @@ class TrainingCourseItem(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self,course):
-        db_course = TrainingCourse.query.filter_by(name=course).first()
+        db_course = TrainingCourse.query.filter_by(id=course).first()
         if db_course is None:
             return create_error_response(404, "Not found", 
                 "No course was found with the name {}".format(course)
@@ -234,7 +235,7 @@ class TrainingCourseItem(Resource):
         return Response(status=204)
 
     def delete(self,course):
-        db_course = TrainingCourse.query.filter_by(name=course).first()
+        db_course = TrainingCourse.query.filter_by(id=course).first()
         if db_course is None:
             return create_error_response(404, "Not found", 
                 "No course was found with the name {}".format(course)
@@ -253,18 +254,21 @@ class TrainingCourseCollection(Resource):
         body.add_control("self", api.url_for(TrainingCourseCollection))
         body.add_control_add_course()
 
-        items = TrainingCourse.query.all()
-        returnlist = []
-        for item in items:
 
-            newitem = {
-                "id":item.id,
-                "name":item.name,
-                "creationdate":item.creationdate,
-                "startdate":item.startdate,
-                "enddate":item.enddate,
-                "coursedatajson":item.coursedatajson
-            }            
+        #items = TrainingCourse.query.all()
+        #returnlist = []
+        body["items"] = []
+
+        for item in TrainingCourse.query.all():
+
+            newitem = TrainingCourseBuilder(
+                id=item.id,
+                name=item.name,
+                creationdate=item.creationdate,
+                startdate=item.startdate,
+                enddate=item.enddate,
+                coursedatajson=item.coursedatajson
+            )            
             coursemedias = item.medialist
 
             medialist = []
@@ -277,8 +281,10 @@ class TrainingCourseCollection(Resource):
                 medialist.append(newmediaitem)
 
             newitem["medialist"]=medialist
-            returnlist.append(newitem)
-        return returnlist
+            newitem.add_control("self", api.url_for(TrainingCourseItem, course=item.id))  
+            body["items"].append(newitem)
+        return Response(json.dumps(body), 200, mimetype=MASON)
+
 
     def post(self):
         if not request.json:
@@ -299,7 +305,7 @@ class TrainingCourseCollection(Resource):
             )
 
         return Response(status=201, headers={
-            "Location": api.url_for(TrainingCourseItem, course=request.json["name"])
+            "Location": api.url_for(TrainingCourseItem, course=course.id)
         })
 
 class CourseMediaCollection(Resource):
@@ -513,7 +519,10 @@ def send_link_relations():
 def delete_all_data():
     print("database tables data delete")
     db.session.query(User).delete()
+    db.session.query(TrainingCourse).delete()
+    db.session.query(CourseMedia).delete()
     db.session.commit()
+
     return Response("Database content deleted",status=200)
 
 @app.route("/trainingmanager/client/")

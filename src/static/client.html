@@ -18,12 +18,20 @@
 	<div class="container"> 
 		<h1>Training Manager Demo</h1>
 
-		<button class="btn btn-primary" type="button" id="createUsers">Create test users</button>
-		<button class="btn btn-danger" type="button" id="deleteData">Delete database content</button>
-		<button class="btn btn-primary" type="button" id="refresh">Refresh</button>
+		<div class="navs">
+			<h3 class="usertablenav">User list view</h3>
+			<h3 class="usernav" style="display:none">User view (Info and courses)</h3>
+			<h3 class="coursenav" style="display:none">Course view</h3>
+			<button class="btn btn-primary usertablenav" type="button" id="createData">Create test data</button>
+			
+			<button class="btn btn-primary usertablenav" type="button" id="refresh">Refresh</button>
+			<button class="btn btn-primary usertablenav" type="button" id="clearButton">Clear notifications</button>
+			<button class="btn btn-danger usertablenav" type="button" id="deleteData">Delete database content</button>
+			<button class="btn btn-primary usernav" type="button" id="backtouserlistbutton" style="display:none">Back to user list</button>
+			<button class="btn btn-primary coursenav" type="button" id="backtouserlistbutton2" style="display:none">Back to user list</button>			
 
-		<button class="btn btn-primary" type="button" id="clearButton">Clear notifications</button>
-
+			<button class="btn btn-primary usernav" type="button" id="deleteuserbutton" style="display:none">Delete this user</button>
+		</div>
 		<div id="notificationarea">			
 		</div>
 
@@ -40,7 +48,23 @@
 
   				  </tbody>
 			</table>
+		</div>
 
+		<div id="userview">			
+		</div>	
+
+		<div id="coursetable"  style="display:none">
+			<table class="table">
+				  <thead class="thead-dark">
+    				<tr>  						
+  						<th scope="col">Course name</th>
+  						<th scope="col">Link</th>
+   					</tr>
+  				  </thead>
+  				  <tbody id="coursetablebody">
+
+  				  </tbody>
+			</table>
 		</div>
 
 	</div>

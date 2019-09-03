@@ -107,7 +107,7 @@ def _check_control_put_method(ctrl, client, obj):
     assert method == "put"
     assert encoding == "json"
     body = {}
-    body["name"] = obj["name"]
+    body["name"] = obj["name"]   
     resp = client.put(href, json=body)
     print("Check put control")
     print(resp)
@@ -140,8 +140,8 @@ class TestTrainingCourseCollection(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
         print(body)
-        assert len(body) == 3
-        for item in body:
+        assert len(body["items"]) == 3
+        for item in body["items"]:   
             assert "id" in item
             assert "name" in item    
 
@@ -159,16 +159,18 @@ class TestTrainingCourseCollection(object):
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 201
         print(resp)
-        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid["name"] + "/")
+        
+        assert resp.headers["Location"].endswith("/")
+        
         resp = client.get(resp.headers["Location"])
-        print(resp)
+        
         assert resp.status_code == 200
-        body = json.loads(resp.data)
+        body = json.loads(resp.data)      
         assert body["name"] == "test-course-validname"
 
 class TestTrainingCourse(object):
 
-    RESOURCE_URL = "/api/trainingcourses/test-course-1/"
+    RESOURCE_URL = "/api/trainingcourses/1/"
     INVALID_URL = "/api/trainingcourses/non-course-x/"    
 
     def test_get(self, client):
