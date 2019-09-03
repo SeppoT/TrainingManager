@@ -1,0 +1,26 @@
+#notificationarea
+{
+	background-color: #20c997;
+	width: 100%;
+	height: 300px;
+	padding: 2px;
+	border: 2px;
+	margin-top: 5px;
+	overflow-y: scroll;
+}
+
+#usertable
+{
+	width: 100%;
+	height: 300px;
+	padding: 2px;
+	border: 2px;
+	margin-top: 5px;
+	overflow-y: scroll;
+}
+
+.error
+{
+	background-color: #ffffff;
+	color: #ff0000;
+}

@@ -7,7 +7,7 @@ from flask_restful import Api
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../db/database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -141,8 +141,6 @@ class TrainingCourseBuilder(MasonBuilder):
                 title="Add user to course"
                 )
 
-
-# todo: on delete
 
 """
 Database ORM classes (SQLAlchemy)
@@ -509,3 +507,18 @@ api.add_resource(CourseMediaCollection, "/api/trainingcourses/<course>/medias/")
 @app.route(LINK_RELATIONS_URL)
 def send_link_relations():
     return "link relations"
+
+#todo debug only, remove all database content
+@app.route("/trainingmanager/truncate/")
+def delete_all_data():
+    print("database tables data delete")
+    db.session.query(User).delete()
+    db.session.commit()
+    return Response("Database content deleted",status=200)
+
+@app.route("/trainingmanager/client/")
+def client_site():
+    print("send client html")
+    return app.send_static_file("client.html")
+
+

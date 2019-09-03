@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap.css">
+    
+    <title>TrainingManager client</title>
+    <script type="text/javascript" src="/static/jquery-3.4.1.js"></script>
+    <script type="text/javascript" src="/static/bootstrap.js"></script>
+
+    <script type="text/javascript" src="/static/client.js"></script>
+</head>
+
+<body>
+	<div class="container"> 
+		<h1>Training Manager Demo</h1>
+
+		<button class="btn btn-primary" type="button" id="createUsers">Create test users</button>
+		<button class="btn btn-danger" type="button" id="deleteData">Delete database content</button>
+		<button class="btn btn-primary" type="button" id="refresh">Refresh</button>
+
+		<button class="btn btn-primary" type="button" id="clearButton">Clear notifications</button>
+
+		<div id="notificationarea">			
+		</div>
+
+		<div id="usertable">
+			<table class="table">
+				  <thead class="thead-dark">
+    				<tr>  						
+  						<th scope="col">First name</th>
+  						<th scope="col">Last name</th>
+  						<th scope="col">Link</th>
+   					</tr>
+  				  </thead>
+  				  <tbody id="usertablebody">
+
+  				  </tbody>
+			</table>
+
+		</div>
+
+	</div>
+
+    
+</body>
