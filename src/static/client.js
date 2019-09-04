@@ -7,6 +7,7 @@ const PLAINJSON = "application/json";
 const USERS_URL = "http://localhost:5000/api/users/"
 const COURSES_URL = "http://localhost:5000/api/trainingcourses/"
 
+
 function renderError(error) {
    
     $("#notificationarea").append("<p class='error'>" + error.status +" "+ error.statusText + "</p>");
@@ -51,9 +52,11 @@ function renderUser(body) {
 	$(".usernav").show()
 	$("#coursetable").show()
 	$(".coursenav").hide()
+	$("#courseview").hide()
 
 	loadCourseList()
 
+	$('#backtouserlistbutton').off('click');
 	$('#backtouserlistbutton').on('click', function(event) 
 	{
 		 renderUserList()
@@ -73,19 +76,21 @@ function renderUser(body) {
 
 function renderCourse(body) {
 	renderMsg(JSON.stringify(body));
-	$("#userview").empty()
+	$("#courseview").empty()
 	$("#userview").hide()	
 	$("#usertable").hide()
 	$(".usertablenav").hide()
 	$(".usernav").hide()
 	$("#coursetable").hide()
 	$(".coursenav").show()
+	$("#courseview").show()
 
+	$('#backtouserlistbutton2').off('click');
 	$('#backtouserlistbutton2').on('click', function(event) 
 	{
 		 renderUserList()
 	})
-
+	$("#courseview").append("<h5>"+JSON.stringify(body)+"</h5>")
 }
 
 function userDeleted(data, status, jqxhr)
@@ -103,6 +108,8 @@ function renderUserList() {
 	$(".usernav").hide()
 	$("#coursetable").hide()
 	$(".coursenav").hide()
+	$("#courseview").hide()
+
 
 }
 
@@ -116,10 +123,30 @@ function userAdded(data, status, jqxhr)
 function courseAdded(data, status, jqxhr)
 {
 	let href = jqxhr.getResponseHeader("Location");
-	renderMsg("Course added : "+href)
+	renderMsg("Course added : "+href+" id:"+data)
+	addTestMediasToCourse(data);
 	loadCourseList()
 }
 
+function addTestMediasToCourse(courseid)
+{
+	let MEDIA_URL = "/api/trainingcourses/"+courseid+"/medias/";
+	let data = {"url":"https://cdn.pixabay.com/photo/2019/08/15/23/55/light-bulb-4409116_960_720.jpg","type":"image"}
+	sendData(MEDIA_URL, "POST", data, mediaAdded);
+	data = {"url":"https://cdn.pixabay.com/photo/2019/08/30/18/43/mountains-4441978_960_720.jpg","type":"image"}
+	sendData(MEDIA_URL, "POST", data, mediaAdded);
+	data = {"url":"https://cdn.pixabay.com/photo/2013/11/28/10/36/road-220058_960_720.jpg","type":"image"}
+	sendData(MEDIA_URL, "POST", data, mediaAdded);
+	//https://cdn.pixabay.com/photo/2019/08/30/18/43/mountains-4441978_960_720.jpg
+	//https://cdn.pixabay.com/photo/2019/08/15/23/55/light-bulb-4409116_960_720.jpg
+	//https://cdn.pixabay.com/photo/2013/11/28/10/36/road-220058_960_720.jpg
+}
+
+function mediaAdded(data, status, jqxhr)
+{
+	let href = jqxhr.getResponseHeader("Location");
+	renderMsg("Media added : "+href)	
+}
 
 function loadUserList()
 {
@@ -137,7 +164,7 @@ function usersLoaded(data, status, jqxhr)
 	//console.log(data.items)
 	for (let [key, value] of Object.entries(data.items)) {
     	//console.log(key, value);
-    	$("#usertablebody").append("<tr><td>"+value.firstname+"</td><td>"+value.lastname+"</td><td><a class='btn btn-primary' type='button' href='"+value["@controls"]["self"]["href"]+"' onClick='followLink(event, this, renderUser)'>Login</a></td>");
+    	$("#usertablebody").append("<tr><td>"+value.firstname+"</td><td>"+value.lastname+"</td><td><a class='btn btn-primary' type='button' href='"+value["@controls"]["self"]["href"]+"' onClick='followLink(event, this, renderUser)'>Select user</a></td>");
 	}
 }
 

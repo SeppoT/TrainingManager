@@ -15,10 +15,10 @@ api = Api(app)
 MASON = "application/vnd.mason+json"
 LINK_RELATIONS_URL = "/trainingmanager/link-relations/"
 
-coursemediarelation = db.Table("coursemediarelation",db.Model.metadata,
-    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
-    db.Column("mediaid", db.Integer, db.ForeignKey("CourseMedia.id"))
-)
+#coursemediarelation = db.Table("coursemediarelation",db.Model.metadata,
+#    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
+#    db.Column("mediaid", db.Integer, db.ForeignKey("CourseMedia.id"))
+#)
 
 courseuserrelation = db.Table("courseuserrelation",
     db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
@@ -127,7 +127,7 @@ class TrainingCourseBuilder(MasonBuilder):
         def add_control_add_media(self, course):
             self.add_control(
                 "addmedia",
-                api.url_for(TrainingCourseItem, course=course),
+                api.url_for(CourseMediaCollection, course=course),
                 method="POST",
                 encoding="json",
                 title="Add media to course"
@@ -166,7 +166,7 @@ class TrainingCourse(db.Model):
     startdate = db.Column(db.DateTime)
     enddate = db.Column(db.DateTime)
     coursedatajson = db.Column(db.String)
-    medialist = db.relationship("CourseMedia",secondary=coursemediarelation,back_populates="courses")
+    medialist = db.relationship("CourseMedia",backref="trainingcourse", lazy=True)
     users = db.relationship("User",secondary=courseuserrelation,back_populates="courses")
 
     def __repr__(self):
@@ -177,10 +177,17 @@ class CourseMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(255))
     type = db.Column(db.String(20))
-    courses = db.relationship("TrainingCourse",secondary=coursemediarelation,back_populates="medialist")
+    course_id = db.Column(db.Integer, db.ForeignKey('TrainingCourse.id'))
 
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
+
+    def serialize(self):
+        return {
+            'id': self.id, 
+            'url': self.url,
+            'type': self.type,
+        }
 
 """
 Resource classes for rest api
@@ -195,7 +202,8 @@ class TrainingCourseItem(Resource):
 
         body = TrainingCourseBuilder(
             id=db_course.id,
-            name=db_course.name
+            name=db_course.name,
+            medialist=[e.serialize() for e in db_course.medialist]
         )
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(TrainingCourseItem, course=course))
@@ -208,8 +216,8 @@ class TrainingCourseItem(Resource):
         body.add_control("trainingmanager:coursemedias",
             api.url_for(CourseMediaCollection, course=course)
         )
-
-        print(json.dumps(body))
+        #print(db_course.medialist)
+        
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self,course):
@@ -254,7 +262,6 @@ class TrainingCourseCollection(Resource):
         body.add_control("self", api.url_for(TrainingCourseCollection))
         body.add_control_add_course()
 
-
         #items = TrainingCourse.query.all()
         #returnlist = []
         body["items"] = []
@@ -298,16 +305,15 @@ class TrainingCourseCollection(Resource):
 
         try:
             db.session.add(course)
-            db.session.commit()
+            db.session.commit()            
+            return Response(str(course.id),status=201, headers={
+            "Location": api.url_for(TrainingCourseItem, course=course.id)
+            })
         except IntegrityError:
             return create_error_response(409, "Already exists", 
                 "Course with name '{}' already exists.".format(request.json["name"])
             )
-
-        return Response(status=201, headers={
-            "Location": api.url_for(TrainingCourseItem, course=course.id)
-        })
-
+        
 class CourseMediaCollection(Resource):
     def get(self,course):
         body = MediaBuilder()
@@ -335,7 +341,8 @@ class CourseMediaCollection(Resource):
 
         newmedia = CourseMedia(
             url=request.json["url"],
-            type=request.json["type"]        
+            type=request.json["type"],
+            course_id=course        
         )
             
         try:
@@ -530,4 +537,4 @@ def client_site():
     print("send client html")
     return app.send_static_file("client.html")
 
-
+db.create_all()
