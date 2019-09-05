@@ -146,11 +146,11 @@ class TestTrainingCourseCollection(object):
             assert "name" in item    
 
     def test_post(self, client):
-        valid = {"name":"test-course-validname"}
+        valid = {"name":"test-course-validname","coursedatajson":"<h5>content</h5>"}
 
         #test wrong content type:
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
-        print('TrainingCourseCollection api post test, invalid media format')
+        print('TrainingCourseCollection api post test, invalid media format',)
         print(resp)
         assert resp.status_code == 415
 
@@ -368,7 +368,7 @@ class TestCourseMediaCollection(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
         #print(body)
-        assert len(body) == 9
+        assert len(body) == 3
         for item in body:
             assert "type" in item
             assert "url" in item 

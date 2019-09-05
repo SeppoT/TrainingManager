@@ -203,6 +203,7 @@ class TrainingCourseItem(Resource):
         body = TrainingCourseBuilder(
             id=db_course.id,
             name=db_course.name,
+            coursedatajson=db_course.coursedatajson,
             medialist=[e.serialize() for e in db_course.medialist]
         )
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
@@ -273,21 +274,20 @@ class TrainingCourseCollection(Resource):
                 name=item.name,
                 creationdate=item.creationdate,
                 startdate=item.startdate,
-                enddate=item.enddate,
-                coursedatajson=item.coursedatajson
+                enddate=item.enddate,                
             )            
-            coursemedias = item.medialist
+            #coursemedias = item.medialist
 
-            medialist = []
-            for mediaitem in coursemedias:
-                newmediaitem = {
-                    "id":mediaitem.id,
-                    "url":mediaitem.url,
-                    "type":mediaitem.type
-                }
-                medialist.append(newmediaitem)
+            #medialist = []
+            #for mediaitem in coursemedias:
+            #    newmediaitem = {
+            #        "id":mediaitem.id,
+            #        "url":mediaitem.url,
+            #        "type":mediaitem.type
+            #    }
+            #    medialist.append(newmediaitem)
 
-            newitem["medialist"]=medialist
+            #newitem["medialist"]=medialist
             newitem.add_control("self", api.url_for(TrainingCourseItem, course=item.id))  
             body["items"].append(newitem)
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -300,7 +300,8 @@ class TrainingCourseCollection(Resource):
             )
 
         course = TrainingCourse(
-            name=request.json["name"]            
+            name=request.json["name"],
+            coursedatajson=request.json["coursedatajson"]
         )
 
         try:
@@ -321,7 +322,7 @@ class CourseMediaCollection(Resource):
         body.add_control("self", api.url_for(CourseMediaCollection, course=course))
         print(body)
 
-        items = CourseMedia.query.all()
+        items = CourseMedia.query.filter_by(course_id=course)
         returnlist = []
         for item in items:            
 
@@ -538,3 +539,4 @@ def client_site():
     return app.send_static_file("client.html")
 
 db.create_all()
+

@@ -90,7 +90,15 @@ function renderCourse(body) {
 	{
 		 renderUserList()
 	})
-	$("#courseview").append("<h5>"+JSON.stringify(body)+"</h5>")
+	//$("#courseview").append("<h5>"+JSON.stringify(body)+"</h5>")
+	
+	let htmlObject = document.createElement('div');
+	htmlObject.innerHTML=body.coursedatajson;
+	$("#courseview").append(htmlObject);	
+	for (let [key, value] of Object.entries(body.medialist)) {
+
+		$("#courseview").append("<img class='courseimagethumb' src='"+value.url+"'></img>")
+	}
 }
 
 function userDeleted(data, status, jqxhr)
@@ -195,11 +203,9 @@ $(document).ready(function () {
    $('#createData').on('click', function(event) 
 	{
 		console.log("Create test data");
-		renderMsg("Creating test users...")
-		
+		renderMsg("Creating test users...")		
 		let data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":true};
 		sendData(USERS_URL, "POST", data, userAdded);
-
 		data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":false};
 		sendData(USERS_URL, "POST", data, userAdded);
 		data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":false};
@@ -207,7 +213,8 @@ $(document).ready(function () {
 		data = {"firstname":"testuser"+Math.floor((Math.random() * 10000) + 1),"lastname":"testuser"+Math.floor((Math.random() * 10000) + 1),"isAdmin":false};
 		sendData(USERS_URL, "POST", data, userAdded);
 
-		data = {"name":"Test course "+Math.floor((Math.random() * 10000) + 1)}
+		data = {"name":"Test course "+Math.floor((Math.random() * 10000) + 1)};
+		data["coursedatajson"]="<p><h5>This is example course introduction title</h5></p><p>Real course or other training would be introduced here.</p>";
 		sendData(COURSES_URL, "POST", data, courseAdded);
 	})
 
