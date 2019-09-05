@@ -233,6 +233,7 @@ class TrainingCourseItem(Resource):
             )
 
         db_course.name = request.json["name"]
+        db_course.coursedatajson = request.json["coursedatajson"]
         
         try:
             db.session.commit()
@@ -320,7 +321,7 @@ class CourseMediaCollection(Resource):
         body = MediaBuilder()
         body.add_namespace("trainingmanager", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(CourseMediaCollection, course=course))
-        print(body)
+        #print(body)
 
         items = CourseMedia.query.filter_by(course_id=course)
         returnlist = []
@@ -374,7 +375,7 @@ class MediaItem(Resource):
         #Should return all media items, not implemented
         #body.add_control("collection", api.url_for(AllMediaCollection))
 
-        print(json.dumps(body))
+        #print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
     def put(self,id):
         db_media = CourseMedia.query.filter_by(id=id).first()
@@ -470,7 +471,7 @@ class UserItem(Resource):
         body.add_control_delete_user(id)
         body.add_control_modify_user(id)
 
-        print(json.dumps(body))
+        #print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self,id):

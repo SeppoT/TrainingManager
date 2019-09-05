@@ -70,7 +70,7 @@ def _check_namespace(client, response):
     ns_href = response["@namespaces"]["trainingmanager"]["name"]
     resp = client.get(ns_href)
     print("Check namespace")
-    print(resp)
+    #print(resp)
     assert resp.status_code == 200
     
 def _check_control_get_method(ctrl, client, obj):
@@ -80,7 +80,7 @@ def _check_control_get_method(ctrl, client, obj):
     href = obj["@controls"][ctrl]["href"]
     resp = client.get(href)
     print("Check get control")
-    print(resp)
+    #print(resp)
     assert resp.status_code == 200
     
 def _check_control_delete_method(ctrl, client, obj):
@@ -92,7 +92,7 @@ def _check_control_delete_method(ctrl, client, obj):
     assert method == "delete"
     resp = client.delete(href)
     print("Check delete control")
-    print(resp)
+    #print(resp)
     assert resp.status_code == 204
     
 def _check_control_put_method(ctrl, client, obj):
@@ -107,10 +107,11 @@ def _check_control_put_method(ctrl, client, obj):
     assert method == "put"
     assert encoding == "json"
     body = {}
-    body["name"] = obj["name"]   
+    body["name"] = obj["name"] 
+    body["coursedatajson"] = obj["coursedatajson"]
     resp = client.put(href, json=body)
     print("Check put control")
-    print(resp)
+    #print(resp)
     assert resp.status_code == 204
     
 def _check_control_post_method(ctrl, client, obj):
@@ -139,7 +140,7 @@ class TestTrainingCourseCollection(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        print(body)
+        #print(body)
         assert len(body["items"]) == 3
         for item in body["items"]:   
             assert "id" in item
@@ -151,14 +152,14 @@ class TestTrainingCourseCollection(object):
         #test wrong content type:
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
         print('TrainingCourseCollection api post test, invalid media format',)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
 
         #test with valid content:
         print('TrainingCourseCollection api post test, valid content')
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 201
-        print(resp)
+        #print(resp)
         
         assert resp.headers["Location"].endswith("/")
         
@@ -188,40 +189,40 @@ class TestTrainingCourse(object):
 
     def test_put(self, client):
         print('TrainingCourse api test, put course')
-        valid = {"name":"test-course-validname"}
+        valid = {"name":"test-course-validname","coursedatajson":"<h5>content</h5>"}
         
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
         
         resp = client.put(self.INVALID_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
         
         # test with another name
         valid["name"] = "test-course-2"
         resp = client.put(self.RESOURCE_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 409
         
         # test with valid 
         valid["name"] = "test-course-1"
         resp = client.put(self.RESOURCE_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 204
         
                 
     def test_delete(self, client):
         print('TrainingCourse api test, delete course')
         resp = client.delete(self.RESOURCE_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
 
 
@@ -250,11 +251,11 @@ class TestUser(object):
         
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
         
         resp = client.put(self.INVALID_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
         
         # test with valid 
@@ -263,20 +264,20 @@ class TestUser(object):
         valid["email"] = "test-email-1"
 
         resp = client.put(self.RESOURCE_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 204
 
 
     def test_delete(self, client):
         print('User api test, delete')
         resp = client.delete(self.RESOURCE_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
 
 class TestUserCollection(object):
@@ -303,17 +304,17 @@ class TestUserCollection(object):
         #test wrong content type:
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
         print('User collection api test,post invalid media format')
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
 
         #test with valid content:
         print('User collection api test, valid content')
-        print(valid)
+        #print(valid)
         resp = client.post(self.RESOURCE_URL, json=valid)        
         assert resp.status_code == 201
         
         assert resp.headers["Location"].endswith("/")
-        print(resp.headers["Location"])
+        #print(resp.headers["Location"])
         resp = client.get(resp.headers["Location"])
         
         assert resp.status_code == 200
@@ -342,11 +343,11 @@ class TestMediaItem(object):
         
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
         
         resp = client.put(self.INVALID_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 404
         
         # test with valid 
@@ -354,7 +355,7 @@ class TestMediaItem(object):
         valid["type"] = "valid-type-1"
 
         resp = client.put(self.RESOURCE_URL, json=valid)
-        print(resp)
+        #print(resp)
         assert resp.status_code == 204
 
 
@@ -380,19 +381,19 @@ class TestCourseMediaCollection(object):
         #test wrong content type:
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
         print('User collection api test,post invalid media format')
-        print(resp)
+        #print(resp)
         assert resp.status_code == 415
 
         #test with valid content:
         print('User collection api test, valid content')
-        print(valid)
+        #print(valid)
         resp = client.post(self.RESOURCE_URL, json=valid)        
         assert resp.status_code == 201
         
         assert resp.headers["Location"].endswith("/")
-        print(resp.headers["Location"])
+        #print(resp.headers["Location"])
         resp = client.get(resp.headers["Location"])
-        print(resp)
+        #print(resp)
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["url"] == "test-valid-url"
