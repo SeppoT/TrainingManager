@@ -22,3 +22,5 @@ Testing :
 3) run database and api tests: runtests.bat (or just pytest)
 
 
+External libraries used : JQuery and Bootstrap (both in src\static folder)
+
