@@ -24,3 +24,4 @@ Testing :
 
 External libraries used : JQuery and Bootstrap (both in src\static folder)
 
+Free images used from pixabay.com
