@@ -15,11 +15,8 @@ api = Api(app)
 MASON = "application/vnd.mason+json"
 LINK_RELATIONS_URL = "/trainingmanager/link-relations/"
 
-#coursemediarelation = db.Table("coursemediarelation",db.Model.metadata,
-#    db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
-#    db.Column("mediaid", db.Integer, db.ForeignKey("CourseMedia.id"))
-#)
 
+#Course and user relation. this also holds information when user completed the training (now implemented in client or api yet)
 courseuserrelation = db.Table("courseuserrelation",
     db.Column("courseid", db.Integer, db.ForeignKey("TrainingCourse.id")),
     db.Column("userid", db.Integer, db.ForeignKey("User.id")),
@@ -59,9 +56,9 @@ def create_error_response(status_code, title, message=None):
     resource_url = request.path
     body = MasonBuilder(resource_url=resource_url)
     body.add_error(title, message)
-    #body.add_control("profile", href=ERROR_PROFILE)
     return Response(json.dumps(body), status_code, mimetype=MASON)
 
+#Mason json helper classes, based on course examples
 class UserBuilder(MasonBuilder):
         def add_control_add_user(self):
             self.add_control(                
@@ -177,7 +174,7 @@ class CourseMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(255))
     type = db.Column(db.String(20))
-    course_id = db.Column(db.Integer, db.ForeignKey('TrainingCourse.id'))
+    course_id = db.Column(db.Integer, db.ForeignKey('TrainingCourse.id', ondelete="SET NULL"))
 
     def __repr__(self):
         return "<CourseMedia %s %s>" % (self.url,self.type)
@@ -264,8 +261,6 @@ class TrainingCourseCollection(Resource):
         body.add_control("self", api.url_for(TrainingCourseCollection))
         body.add_control_add_course()
 
-        #items = TrainingCourse.query.all()
-        #returnlist = []
         body["items"] = []
 
         for item in TrainingCourse.query.all():
@@ -277,18 +272,6 @@ class TrainingCourseCollection(Resource):
                 startdate=item.startdate,
                 enddate=item.enddate,                
             )            
-            #coursemedias = item.medialist
-
-            #medialist = []
-            #for mediaitem in coursemedias:
-            #    newmediaitem = {
-            #        "id":mediaitem.id,
-            #        "url":mediaitem.url,
-            #        "type":mediaitem.type
-            #    }
-            #    medialist.append(newmediaitem)
-
-            #newitem["medialist"]=medialist
             newitem.add_control("self", api.url_for(TrainingCourseItem, course=item.id))  
             body["items"].append(newitem)
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -539,5 +522,6 @@ def client_site():
     print("send client html")
     return app.send_static_file("client.html")
 
+#create sqlite database (does nothing if database already exits)
 db.create_all()
 

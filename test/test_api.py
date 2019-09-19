@@ -36,7 +36,7 @@ def client():
     os.unlink(db_fname)
 
 def _populate_db():
-    """API test db creation, test data"""
+    """API test db creation, test data, based on course example"""
     for i in range(1, 4):
         s = TrainingCourse(
             name="test-course-{}".format(i)
@@ -130,7 +130,7 @@ def _check_control_post_method(ctrl, client, obj):
 
     assert resp.status_code == 201
 
-
+#test recourse apis, based on course examples
 class TestTrainingCourseCollection(object):
     
     RESOURCE_URL = "/api/trainingcourses/"

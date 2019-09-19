@@ -4,12 +4,11 @@ const DEBUG = true;
 const MASONJSON = "application/vnd.mason+json";
 const PLAINJSON = "application/json";
 
+//these could be read from /api/ root control
 const USERS_URL = "http://localhost:5000/api/users/"
 const COURSES_URL = "http://localhost:5000/api/trainingcourses/"
 
-
 function renderError(error) {
-   
     $("#notificationarea").append("<p class='error'>" + error.status +" "+ error.statusText + "</p>");
 }
 
@@ -18,6 +17,7 @@ function renderMsg(msg) {
     $("#notificationarea").animate({ scrollTop: $('#notificationarea').prop("scrollHeight")}, 100);
 }
 
+//load resource with ajax, based on course example
 function getResource(href, renderer) {
     $.ajax({
         url: href,
@@ -26,11 +26,13 @@ function getResource(href, renderer) {
     });
 }
 
+//follow link, based on course example
 function followLink(event, a, renderer) {
     event.preventDefault();
     getResource($(a).attr("href"), renderer);
 }
 
+//send ajax request to server, process response with given postprocessor , based on course example
 function sendData(href, method, item, postProcessor) {
     $.ajax({
         url: href,
@@ -43,6 +45,7 @@ function sendData(href, method, item, postProcessor) {
     });
 }
 
+//render user view ( course list )
 function renderUser(body) {
 	renderMsg(JSON.stringify(body));
 	$("#userview").empty()
@@ -59,6 +62,7 @@ function renderUser(body) {
 	$('#backtouserlistbutton').off('click');
 	$('#backtouserlistbutton').on('click', function(event) 
 	{
+		//back , could be read from control
 		 renderUserList()
 	})
 
@@ -73,7 +77,7 @@ function renderUser(body) {
 	$("#userview").append("<h3>"+body.firstname+" "+body.lastname+"</h3>")
 }
 
-
+//render course view 
 function renderCourse(body) {
 	renderMsg(JSON.stringify(body));
 	$("#courseview").empty()
@@ -136,6 +140,7 @@ function courseAdded(data, status, jqxhr)
 	loadCourseList()
 }
 
+//add some test images to course with the api
 function addTestMediasToCourse(courseid)
 {
 	let MEDIA_URL = "/api/trainingcourses/"+courseid+"/medias/";
@@ -192,6 +197,7 @@ function dataDeleted(data, status, jqxhr)
 	loadUserList()
 }
 
+
 $(document).ready(function () {
    //getResource("http://localhost:5000/api/sensors/", renderSensors);
    $('#clearButton').on('click', function(event) 
@@ -199,7 +205,7 @@ $(document).ready(function () {
 		console.log("Cleared notification area");
 		$("#notificationarea").empty();
 	})
-
+   //create test data (users and courses)
    $('#createData').on('click', function(event) 
 	{
 		console.log("Create test data");
